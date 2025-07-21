@@ -11,7 +11,7 @@ async def startup():
 
 
 @app.get("/db")
-def connect_database():
+async def connect_database():
     # Create db tables
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
