@@ -3,7 +3,7 @@ from app.core.config import settings
 from app.database.connection import engine, Base
 from app.api.v1.routers import api_router
 
-app = FastAPI(title=settings.o2mobile)
+app = FastAPI(title=settings.PROJECT_NAME)
 
 @app.on_event("startup")
 async def startup():
