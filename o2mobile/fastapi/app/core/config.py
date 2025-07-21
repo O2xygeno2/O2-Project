@@ -2,7 +2,7 @@ from pydantic import BaseSettings
 import os
 
 class Settings(BaseSettings):
-    PROJECT_NAME: str = "FastAPI PostgreSQL"
+    PROJECT_NAME: str = "o2mobile"
     
     # For Cloud Run + Cloud SQL
     DB_USER: str = os.getenv("DB_USER")
