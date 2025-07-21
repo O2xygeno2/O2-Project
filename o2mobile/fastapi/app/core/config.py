@@ -26,7 +26,12 @@ class Settings(BaseSettings):
             return (
                 f"postgresql+asyncpg://{self.DB_USER}:{self.DB_PASS}@/{self.DB_NAME}"
                 f"?host={self.DB_SOCKET_DIR}/{self.CLOUD_SQL_CONNECTION_NAME}"
+                "&async_fallback=True"  # Important for PostGIS with asyncpg
             )
-        return f"postgresql+asyncpg://{self.DB_USER}:{self.DB_PASS}@{self.POSTGRES_HOST}:{self.POSTGRES_PORT}/{self.DB_NAME}"
+        return (
+            f"postgresql+asyncpg://{self.DB_USER}:{self.DB_PASS}"
+            f"@{self.POSTGRES_HOST}:{self.POSTGRES_PORT}/{self.DB_NAME}"
+            "?async_fallback=True"
+        )
 
 settings = Settings()
