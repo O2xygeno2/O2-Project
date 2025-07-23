@@ -1,24 +1,33 @@
-version: '3.3'
+version: '3.8'
 
 services:
   app:
     build: .
-    ports: ["8000:8000"]
-    env_file: .env
+    ports:
+      - "8000:8000"
+    env_file:
+      - .env
+    volumes:
+      - .:/app
+      - /cloudsql:/cloudsql
     depends_on:
-      cloudsql-proxy:
-        condition: service_healthy
+      - cloudsql-proxy  # Now as an array element
+    command: >
+      sh -c "uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload"
 
   cloudsql-proxy:
     image: gcr.io/cloud-sql-connectors/cloud-sql-proxy:latest
-    environment:
-      - USE_IAM_AUTH=true
-    command: 
-      - "--address=0.0.0.0"
-      - "--port=5432"
-      - "${CLOUD_SQL_CONNECTION_NAME}"
+    env_file:
+      - .env
+    command: >
+      /cloud-sql-proxy
+      --credentials-file /credentials/cloudsql-credentials.json
+      ${CLOUD_SQL_CONNECTION_NAME}
+    volumes:
+      - ./credentials:/credentials
+      - /cloudsql:/cloudsql
     healthcheck:
-      test: ["CMD", "nc", "-z", "localhost", "5432"]
+      test: ["CMD", "/cloud-sql-proxy", "--version"]
       interval: 10s
       timeout: 5s
       retries: 5
