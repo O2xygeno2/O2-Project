@@ -1,4 +1,4 @@
-version: '3.3'
+version: '3.8'
 
 services:
   app:
@@ -7,28 +7,21 @@ services:
       - "8000:8000"
     env_file:
       - .env
-    depends_on:
-      - db
     volumes:
-      - ./app:/app  # For development with hot-reload
-      - /cloudsql:/cloudsql  # Only if using Cloud SQL
-    command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+      - ./app:/app  # Only needed for development
+      - /cloudsql:/cloudsql  # Critical for Cloud SQL connection
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8000
+    restart: unless-stopped
 
-  db:
-    image: postgres:13-alpine
-    environment:
-      POSTGRES_USER: ${DB_USER}
-      POSTGRES_PASSWORD: ${DB_PASS}
-      POSTGRES_DB: ${DB_NAME}
-    ports:
-      - "5432:5432"
+  cloudsql-proxy:
+    image: gcr.io/cloudsql-docker/gce-proxy:latest
+    env_file:
+      - .env
+    command: >
+      /cloud_sql_proxy
+      -instances=${CLOUD_SQL_CONNECTION_NAME}=tcp:5432
+      -credential_file=/credentials/cloudsql-credentials.json
     volumes:
-      - postgres_data:/var/lib/postgresql/data/
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${DB_USER} -d ${DB_NAME}"]
-      interval: 5s
-      timeout: 5s
-      retries: 5
-
-volumes:
-  postgres_data:
+      - /cloudsql:/cloudsql
+      - ./credentials:/credentials  # Directory containing your service account JSON
+    restart: unless-stopped
