@@ -3,32 +3,22 @@ version: '3.3'
 services:
   app:
     build: .
-    ports:
-      - "8000:8000"
-    env_file:
-      - .env
-    environment:
-      - GOOGLE_APPLICATION_CREDENTIALS=/var/run/secrets/cloud.google.com/service-account.json
-    volumes:
-      - .:/app
-      - ${GOOGLE_APPLICATION_CREDENTIALS}:/var/run/secrets/cloud.google.com/service-account.json
-    command: >
-      sh -c "uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload"
+    ports: ["8000:8000"]
+    env_file: .env
     depends_on:
-      - cloudsql-proxy
+      cloudsql-proxy:
+        condition: service_healthy
 
   cloudsql-proxy:
     image: gcr.io/cloud-sql-connectors/cloud-sql-proxy:latest
     environment:
-      - CLOUD_SQL_CONNECTION_NAME=${CLOUD_SQL_CONNECTION_NAME}
-    command: >
-      /cloud-sql-proxy
-      ${CLOUD_SQL_CONNECTION_NAME}
-      --credentials-file /var/run/secrets/cloud.google.com/service-account.json
-    volumes:
-      - ${GOOGLE_APPLICATION_CREDENTIALS}:/var/run/secrets/cloud.google.com/service-account.json
+      - USE_IAM_AUTH=true
+    command: 
+      - "--address=0.0.0.0"
+      - "--port=5432"
+      - "${CLOUD_SQL_CONNECTION_NAME}"
     healthcheck:
-      test: ["CMD", "/cloud-sql-proxy", "--version"]
+      test: ["CMD", "nc", "-z", "localhost", "5432"]
       interval: 10s
       timeout: 5s
       retries: 5
