@@ -1,27 +1,37 @@
-version: '3.3'
+version: '3.8'
 
 services:
   app:
-    build: .
+    build:
+      context: .
+      dockerfile: Dockerfile
     ports:
       - "8000:8000"
     env_file:
       - .env
     volumes:
-      - ./app:/app  # Only needed for development
-      - /cloudsql:/cloudsql  # Critical for Cloud SQL connection
-    command: uvicorn app.main:app --host 0.0.0.0 --port 8000
-    restart: unless-stopped
+      - .:/app  # Mount entire project directory
+      - /cloudsql:/cloudsql
+    working_dir: /app  # Set working directory
+    command: >
+      sh -c "uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload"
+    depends_on:
+      cloudsql-proxy:
+        condition: service_healthy
 
   cloudsql-proxy:
-    image: gcr.io/cloudsql-docker/gce-proxy:latest
+    image: gcr.io/cloud-sql-connectors/cloud-sql-proxy:latest
     env_file:
       - .env
     command: >
-      /cloud_sql_proxy
-      -instances=${CLOUD_SQL_CONNECTION_NAME}=tcp:5432
-      -credential_file=/credentials/cloudsql-credentials.json
+      /cloud-sql-proxy
+      --credentials-file /credentials/cloudsql-credentials.json
+      ${CLOUD_SQL_CONNECTION_NAME}
     volumes:
+      - ./credentials:/credentials
       - /cloudsql:/cloudsql
-      - ./credentials:/credentials  # Directory containing your service account JSON
-    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "/cloud-sql-proxy", "--version"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
