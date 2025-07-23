@@ -5,9 +5,9 @@ class Settings(BaseSettings):
     PROJECT_NAME: str = "o2mobile"
     
     # For Cloud Run + Cloud SQL
-    DB_USER: str = os.getenv("POSTGRES_USER")
-    DB_PASS: str = os.getenv("POSTGRES_PASSWORD")
-    DB_NAME: str = os.getenv("POSTGRES_DB_NAME")
+    DB_USER: str = os.getenv("DB_USER")
+    DB_PASS: str = os.getenv("DB_PASS")
+    DB_NAME: str = os.getenv("DB_NAME")
     DB_SOCKET_DIR: str = os.getenv("DB_SOCKET_DIR", "/cloudsql")
     CLOUD_SQL_CONNECTION_NAME: str = os.getenv("CLOUD_SQL_CONNECTION_NAME")
     
