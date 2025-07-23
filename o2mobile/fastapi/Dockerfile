@@ -5,9 +5,12 @@ RUN apt-get update && apt-get install -y \
     build-essential \
     && rm -rf /var/lib/apt/lists/*
 
+ENV PYTHONPATH=/app
+
 WORKDIR /app
 COPY . .
 
+COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
 # Explicitly expose port 8080
